@@ -1,0 +1,12 @@
+.git
+.gitignore
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+venv
+.env
+*.md
+!beforma_workout_plan_api_package_50/README_WORKOUT_PLAN_DELIVERY.md
+.idea
+.vscode
