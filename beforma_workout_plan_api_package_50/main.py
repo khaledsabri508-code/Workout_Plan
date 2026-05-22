@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict
 from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from workout_models import WorkoutPlanRequest
@@ -11,7 +12,14 @@ API_VERSION = "1.1.0-workout-plan-50-exercises"
 API_KEY = os.getenv("BEFORMA_API_KEY", "")
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
-app = FastAPI(title="BeForma Workout Plan API", description="Personalized workout plan generator with 50 English exercises and local images.", version=API_VERSION)
+app = FastAPI(
+    title="BeForma Workout Plan API",
+    description="Personalized workout plan generator with 50 English exercises and local images.",
+    version=API_VERSION,
+    docs_url="/swagger",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -19,9 +27,14 @@ def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
     if API_KEY and x_api_key != API_KEY:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API key.")
 
+@app.get("/docs", include_in_schema=False)
+def docs_redirect():
+    """Redirect /docs to /swagger for backward compatibility."""
+    return RedirectResponse(url="/swagger")
+
 @app.get("/")
 def root() -> Dict[str, Any]:
-    return {"name": "BeForma Workout Plan API", "version": API_VERSION, "docs": "/docs", "health": "/health", "main_endpoint": "/api/v1/workout/generate-plan"}
+    return {"name": "BeForma Workout Plan API", "version": API_VERSION, "docs": "/swagger", "health": "/health", "main_endpoint": "/api/v1/workout/generate-plan"}
 
 @app.get("/health")
 def health() -> Dict[str, Any]:
